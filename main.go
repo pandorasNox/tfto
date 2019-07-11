@@ -91,22 +91,22 @@ func createAnsibleInventoryHetzner(hetznerServerResources []TFResource) AnsibleI
 	AnsibleInventory := make(map[string]Group)
 
 	for _, hr := range hetznerServerResources {
-		instance := hr.Instances[0]
+		for _, instance := range hr.Instances {
+			//extract group names of hetzner
+			aig := instance.Attributes.Labels.AnsibleInventoryGroups
+			ansibleGroupNames := strings.Split(aig, ".")
 
-		//extract group names of hetzner
-		aig := instance.Attributes.Labels.AnsibleInventoryGroups
-		ansibleGroupNames := strings.Split(aig, ".")
+			name := instance.Attributes.Name
+			hostAddress := instance.Attributes.Ipv4Address
 
-		name := instance.Attributes.Name
-		hostAddress := instance.Attributes.Ipv4Address
-
-		for _, groupName := range ansibleGroupNames {
-			_, groupExists := AnsibleInventory[groupName]
-			if !groupExists {
-				newHosts := make(map[string]Host)
-				AnsibleInventory[groupName] = Group{Hosts: newHosts}
+			for _, groupName := range ansibleGroupNames {
+				_, groupExists := AnsibleInventory[groupName]
+				if !groupExists {
+					newHosts := make(map[string]Host)
+					AnsibleInventory[groupName] = Group{Hosts: newHosts}
+				}
+				AnsibleInventory[groupName].Hosts[name] = Host{hostAddress, "root"}
 			}
-			AnsibleInventory[groupName].Hosts[name] = Host{hostAddress, "root"}
 		}
 	}
 
