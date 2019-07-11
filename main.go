@@ -3,50 +3,27 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 )
 
 func main() {
-	fmt.Println("Hello World")
+	// fmt.Println("Hello World")
 
 	info, _ := os.Stdin.Stat()
-
 	if (info.Mode() & os.ModeCharDevice) == os.ModeCharDevice {
 		fmt.Println("The command is intended to work with pipes.")
 		fmt.Println("Usage:")
-		fmt.Println("  cat yourfile.txt | searchr -pattern=<your_pattern>")
+		fmt.Println("  cat terraform.tfstate | tftoinv")
 		return
 	}
 
-	// reader := bufio.NewReader(os.Stdin)
-
-	// line := 1
-	// for {
-	// 	input, err := reader.ReadString('\n')
-	// 	if err != nil && err == io.EOF {
-	// 		break
-	// 	}
-
-	// 	// color := "\x1b[39m"
-	// 	// if strings.Contains(input, pattern) {
-	// 	// 	color = "\x1b[31m"
-	// 	// }
-
-	// 	// fmt.Printf("%s%2d: %s", color, line, input)
-	// 	fmt.Println("line: ", line, " | contains: ", input)
-	// 	line++
-	// }
-	// // match(*pattern, reader)
-
-	holeInput := ""
-	var b bytes.Buffer
+	var inputBufer bytes.Buffer
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
-		holeInput = holeInput + scanner.Text()
-		b.WriteString(scanner.Text())
+		inputBufer.WriteString(scanner.Text())
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -54,6 +31,15 @@ func main() {
 		return
 	}
 
-	fmt.Printf("hole input:\n%v\n", holeInput)
-	fmt.Printf("hole buffer:\n%v\n", b.String())
+	// fmt.Printf("inputBufer:\n%v\n", inputBufer.String())
+
+	inputTfstate := &tfstate{}
+	if err := json.Unmarshal([]byte(inputBufer.String()), inputTfstate); err != nil {
+		fmt.Println("failed to Unmarshal stdin as an terraform.state json")
+		// return fmt.Errorf("failed to Unmarshal Pod from incoming AdmissionReview: %s", err)
+		return
+	}
+
+	fmt.Println("inputTfstate:")
+	fmt.Println(inputTfstate)
 }
