@@ -10,4 +10,5 @@ cli tool to transform tf state file into static inventory file
 - support multiple cloud providers
 - provider are recognized automatically
 - e.g. build cluster from one DO instance, one hetzner instance, etc ...
+- limit + handle stdin read
 
