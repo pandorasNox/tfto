@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+
+	"github.com/ghodss/yaml"
 )
 
 func main() {
@@ -17,17 +20,25 @@ func main() {
 		fmt.Println("Failed to create TFState from stdin: ", err)
 		return
 	}
-	_ = inputTfstate
-
 	// fmt.Println("inputTfstate:")
 	// fmt.Println(inputTfstate)
 
-	err = doAnsibleJson()
+	TFHetznerServerResources := extractTFHetznerServerResources(inputTfstate)
+	// fmt.Println("TFHetznerServerResources:")
+	// fmt.Println(TFHetznerServerResources)
+
+	//TODO: v2 - input uses an interface => hetzer, DO ...
+	ansibleInventory := createAnsibleInventoryHetzner(TFHetznerServerResources)
+	// fmt.Println("ansibleInventory:")
+	// fmt.Println(ansibleInventory)
+
+	yaml, err := yaml.Marshal(ansibleInventory)
 	if err != nil {
-		fmt.Println("failed doAnsibleJson", err)
+		fmt.Println("failed to yaml marshal map: ", err)
 		return
 	}
 
+	fmt.Println(string(yaml))
 }
 
 func getTFStateFromStdin() (tfstate, error) {
@@ -60,10 +71,52 @@ func getTFStateFromStdin() (tfstate, error) {
 	return *inputTfstate, nil
 }
 
+func extractTFHetznerServerResources(inputTfstate tfstate) []TFResource {
+	tfresources := inputTfstate.Resources
+
+	provider := "provider.hcloud"
+	resourceType := "hcloud_server"
+
+	tfHetznerResources := []TFResource{}
+	for _, tfr := range tfresources {
+		if (tfr.Provider == provider) && (tfr.Type == resourceType) {
+			tfHetznerResources = append(tfHetznerResources, tfr)
+		}
+	}
+
+	return tfHetznerResources
+}
+
+func createAnsibleInventoryHetzner(hetznerServerResources []TFResource) AnsibleInventory {
+	AnsibleInventory := make(map[string]Group)
+
+	for _, hr := range hetznerServerResources {
+		instance := hr.Instances[0]
+
+		//extract group names of hetzner
+		aig := instance.Attributes.Labels.AnsibleInventoryGroups
+		ansibleGroupNames := strings.Split(aig, ".")
+
+		name := instance.Attributes.Name
+		hostAddress := instance.Attributes.Ipv4Address
+
+		for _, groupName := range ansibleGroupNames {
+			_, groupExists := AnsibleInventory[groupName]
+			if !groupExists {
+				newHosts := make(map[string]Host)
+				AnsibleInventory[groupName] = Group{Hosts: newHosts}
+			}
+			AnsibleInventory[groupName].Hosts[name] = Host{hostAddress, "root"}
+		}
+	}
+
+	return AnsibleInventory
+}
+
 func doAnsibleJson() error {
-	hosts := make(map[string]host)
-	hosts["example-host-name1"] = host{"10.11.12.11", "root"}
-	hosts["example-host-name2"] = host{"10.11.12.11", "root"}
+	hosts := make(map[string]Host)
+	hosts["example-host-name1"] = Host{"10.11.12.11", "root"}
+	hosts["example-host-name2"] = Host{"10.11.12.11", "root"}
 
 	json, err := json.Marshal(hosts)
 	if err != nil {

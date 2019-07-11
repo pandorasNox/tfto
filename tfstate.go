@@ -19,7 +19,7 @@ type TFResource struct {
 			Image       string `json:"image"`
 			Ipv4Address string `json:"ipv4_address"`
 			Labels      struct {
-				K8sNodeType string `json:"k8s_node_type"`
+				AnsibleInventoryGroups string `json:"ansible_inventory_groups"`
 			} `json:"labels"`
 			Location   string      `json:"location"`
 			Name       string      `json:"name"`
