@@ -20,10 +20,10 @@ func main() {
 		return
 	}
 
-	var inputBufer bytes.Buffer
+	var inputBuffer bytes.Buffer
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		inputBufer.WriteString(scanner.Text())
+		inputBuffer.WriteString(scanner.Text())
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -31,10 +31,10 @@ func main() {
 		return
 	}
 
-	// fmt.Printf("inputBufer:\n%v\n", inputBufer.String())
+	// fmt.Printf("inputBuffer:\n%v\n", inputBuffer.String())
 
 	inputTfstate := &tfstate{}
-	if err := json.Unmarshal(inputBufer.Bytes(), inputTfstate); err != nil {
+	if err := json.Unmarshal(inputBuffer.Bytes(), inputTfstate); err != nil {
 		fmt.Println("failed to Unmarshal stdin as an terraform.state json")
 		// return fmt.Errorf("failed to Unmarshal Pod from incoming AdmissionReview: %s", err)
 		return
