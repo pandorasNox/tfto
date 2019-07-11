@@ -34,7 +34,7 @@ func main() {
 	// fmt.Printf("inputBufer:\n%v\n", inputBufer.String())
 
 	inputTfstate := &tfstate{}
-	if err := json.Unmarshal([]byte(inputBufer.String()), inputTfstate); err != nil {
+	if err := json.Unmarshal(inputBufer.Bytes(), inputTfstate); err != nil {
 		fmt.Println("failed to Unmarshal stdin as an terraform.state json")
 		// return fmt.Errorf("failed to Unmarshal Pod from incoming AdmissionReview: %s", err)
 		return
