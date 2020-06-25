@@ -1,4 +1,4 @@
-module tftoinv
+module github.com/pandorasNox/tfto
 
 go 1.12
 
